@@ -4,6 +4,8 @@
 #pragma config(Sensor, S4,     button,         sensorTouch)
 #pragma config(Motor,  motorA,          motor_right,   tmotorNXT, PIDControl, reversed, driveRight, encoder)
 #pragma config(Motor,  motorB,          motor_left,    tmotorNXT, PIDControl, reversed, driveLeft, encoder)
+#pragma config(Motor,  motorC,          motor_shoot,   tmotorNXT, PIDControl, reversed, encoder)
+
 #pragma platform(NXT)
 
 
@@ -20,9 +22,13 @@ float deltaTime;
 
 int direction;
 
-#define MOTOR_SPEED 55
-#define MOTOR_SPEED_TURN 100
-#define MOTOR_SPEED_TURN_NEGATIVE -10
+#define MOTOR_SPEED 60
+#define MOTOR_SPEED_TURN 70
+#define MOTOR_SPEED_TURN_NEGATIVE 5
+#define MOTOR_SPEED_TURN_SHARP MOTOR_SPEED_TURN
+#define MOTOR_SPEED_TURN_SHARP_NEGATIVE MOTOR_SPEED_TURN_NEGATIVE
+#define ROTATE_TIME 2.0
+#define ROTATE_TIME_SHARP 3.0
 
 #define STOP_SECONDS 1.0
 
@@ -63,10 +69,10 @@ task commands()
     	nxtDisplayTextLine(2, "%s", s);
 
     	if (s == "FIRE") {
-    		nxtDisplayTextLine(3, "going");
+    		nxtDisplayTextLine(5, "going");
     		commandStopped = false;
     	} else if (s == "DOWN") {
-    		nxtDisplayTextLine(3, "stop");
+    		nxtDisplayTextLine(5, "stop");
     		commandStopped = true;
     	} else if (s == "LEFT") {
     		direction = INT_LEFT;
@@ -133,6 +139,15 @@ task DrivingSound()
 	}
 }
 
+int get_motor_speed(float percent, int begin, int end)
+{
+	percent = 1 - (percent - 1) * (percent - 1) * (percent - 1) * (percent - 1);
+
+	int diff = end - begin;
+	percent = percent * diff;
+	return begin + percent;
+}
+
 bool found;
 
 void LineFolower()
@@ -142,9 +157,9 @@ void LineFolower()
 	int old_system_time = nSysTime;
 	int new_system_time;
 	float deltaTime;
+	float rotateTime = 0.0;
 	float stopped_time = 0.0;
-
-	int rl, rr;
+	float rotate_time_total = 0.0;
 
 	while (1)
 	{
@@ -168,63 +183,73 @@ void LineFolower()
 		}
 
 		nxtDisplayTextLine(7, "%f", stopped_time);
-
-		/*while (stopped)
-		{
-			int ml, mr;
-			ml = motor[motor_left];
-			mr = motor[motor_right];
-
-			ml -= rl;
-			mr -= rr;
-			if (ml < 0) ml = 0;
-			if (mr < 0) mr = 0;
-
-			nxtDisplayTextLine(6, "%i = %i", rl, rr);
-
-			motor[motor_left] = ml;
-			motor[motor_right] = mr;
-
-			if (objectStopped || commandStopped) {
-			stopped = true;
-			} else {
-				stopped = false;
-			}
-
-			wait1Msec(250);
-		}*/
-
 		nxtDisplayTextLine(0, "Start");
 		int c = SensorValue[line];
+		int d = SensorValue[line_check];
 		nxtDisplayTextLine(3, "Color: %f", c);
+
 		if (onLine(c)) {
 			motor[motor_left] = MOTOR_SPEED - (stopped_time * (MOTOR_SPEED / STOP_SECONDS));
 			motor[motor_right] = MOTOR_SPEED - (stopped_time * (MOTOR_SPEED / STOP_SECONDS));
 			found = false;
-			int d = SensorValue[line_check];
+			rotateTime = 0.0;
+			rotate_time_total = 0.0;
+
 			if (d < 44) {
 				nxtDisplayTextLine(6, "Intersection");
 				if (direction == INT_STRAIGHT) {
 
 				} else if (direction == INT_LEFT) {
+					motor[motor_left] = MOTOR_SPEED;
+					motor[motor_right] = MOTOR_SPEED;
+					wait1Msec(400);
 					motor[motor_left] = MOTOR_SPEED_TURN_NEGATIVE;
 					motor[motor_right] = MOTOR_SPEED_TURN;
-					wait1Msec(1800);
+					wait1Msec(700);
+					c = SensorValue[line];
+					while (!onLine(c))
+					{
+						c = SensorValue[line];
+					}
 				} else {
+					motor[motor_left] = MOTOR_SPEED;
+					motor[motor_right] = MOTOR_SPEED;
+					wait1Msec(400);
 					motor[motor_left] = MOTOR_SPEED_TURN;
 					motor[motor_right] = MOTOR_SPEED_TURN_NEGATIVE;
-					wait1Msec(1800);
+					wait1Msec(700);
+					c = SensorValue[line];
+					while (!onLine(c))
+					{
+						c = SensorValue[line];
+					}
 				}
 			}
 		} else {
-			int d = SensorValue[line_check];
+			rotateTime += deltaTime;
+			rotate_time_total += deltaTime;
+			if (rotateTime > ROTATE_TIME) {
+				rotateTime = ROTATE_TIME;
+			}
+			float rotate_percent = rotateTime / ROTATE_TIME;
+
 			if (d < 44 || found) {
-				motor[motor_left] = MOTOR_SPEED_TURN_NEGATIVE - (stopped_time * (MOTOR_SPEED_TURN_NEGATIVE / STOP_SECONDS));
-				motor[motor_right] = MOTOR_SPEED_TURN - (stopped_time * (MOTOR_SPEED_TURN / STOP_SECONDS));
+				if (rotate_time_total > ROTATE_TIME_SHARP) {
+					motor[motor_left] = MOTOR_SPEED_TURN_SHARP_NEGATIVE;
+					motor[motor_right] = MOTOR_SPEED_TURN_SHARP;
+				} else {
+					motor[motor_left] = get_motor_speed(rotate_percent, MOTOR_SPEED, MOTOR_SPEED_TURN_NEGATIVE - (stopped_time * (MOTOR_SPEED_TURN_NEGATIVE / STOP_SECONDS)));
+					motor[motor_right] = get_motor_speed(rotate_percent, MOTOR_SPEED, MOTOR_SPEED_TURN - (stopped_time * (MOTOR_SPEED_TURN / STOP_SECONDS)));
+				}
 				found = true;
 			} else {
-				motor[motor_left] = MOTOR_SPEED_TURN - (stopped_time * (MOTOR_SPEED_TURN / STOP_SECONDS));
-				motor[motor_right] = MOTOR_SPEED_TURN_NEGATIVE - (stopped_time * (MOTOR_SPEED_TURN_NEGATIVE / STOP_SECONDS));
+				if (rotate_time_total > ROTATE_TIME_SHARP) {
+					motor[motor_left] = MOTOR_SPEED_TURN_SHARP;
+					motor[motor_right] = MOTOR_SPEED_TURN_SHARP_NEGATIVE;
+				} else {
+					motor[motor_left] = get_motor_speed(rotate_percent, MOTOR_SPEED, MOTOR_SPEED_TURN - (stopped_time * (MOTOR_SPEED_TURN / STOP_SECONDS)));
+					motor[motor_right] = get_motor_speed(rotate_percent, MOTOR_SPEED, MOTOR_SPEED_TURN_NEGATIVE - (stopped_time * (MOTOR_SPEED_TURN_NEGATIVE / STOP_SECONDS)));
+				}
 			}
 		}
 
@@ -240,6 +265,7 @@ task ObjectInWay()
 		if (distance < 25) {
 			objectStopped = true;
 			nxtDisplayTextLine(1, "Object in way %f", distance);
+			wait1Msec(STOP_SECONDS * 1000 + 500);
 		} else {
 			objectStopped = false;
 			nxtDisplayTextLine(1, "No object %f", distance);
