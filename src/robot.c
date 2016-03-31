@@ -26,6 +26,15 @@ int dirlist_index = 0;
 bool goto_destination = false;
 int intersection_count = 0;
 
+#define DIR_N 0
+#define DIR_E 1
+#define DIR_S 2
+#define DIR_W 3
+
+int posx = 0;
+int posy = 0;
+int grid_direction = DIR_N;
+
 #define MOTOR_SPEED 60
 #define MOTOR_SPEED_TURN 80
 #define MOTOR_SPEED_TURN_NEGATIVE -25
@@ -50,6 +59,48 @@ bool onLine(int color)
 		case 4: return true;
 		case 5: return true;
 		default: return false;
+	}
+}
+
+void update_position(int turn)
+{
+	if (grid_direction == DIR_N) {
+		posx++;
+		if (turn == INT_LEFT) {
+			grid_direction = DIR_W;
+		} else if (turn == INT_RIGHT) {
+			grid_direction = DIR_E;
+		}
+	} else if (grid_direction == DIR_S) {
+		posx--;
+		if (turn == INT_LEFT) {
+			grid_direction = DIR_E;
+		} else if (turn == INT_RIGHT) {
+			grid_direction = DIR_W;
+		}
+	} else if (grid_direction == DIR_W) {
+		posy++;
+		if (turn == INT_LEFT) {
+			grid_direction = DIR_S;
+		} else if (turn == INT_RIGHT) {
+			grid_direction = DIR_N;
+		}
+	} else {
+		posy--;
+		if (turn == INT_LEFT) {
+			grid_direction = DIR_N;
+		} else if (turn == INT_RIGHT) {
+			grid_direction = DIR_S;
+		}
+	}
+
+	nxtDisplayTextLine(5, "x: %i y: %i", posx, posy);
+}
+
+void clear_direction_array()
+{
+	for (int i = 0; i < 32; i++) {
+		dirlist[i] = 0;
 	}
 }
 
@@ -214,8 +265,9 @@ void LineFolower()
 				}
 
 				if (direction == INT_STRAIGHT) {
-
+					update_position(INT_STRAIGHT);
 				} else if (direction == INT_LEFT) {
+					update_position(INT_LEFT);
 					motor[motor_left] = MOTOR_SPEED;
 					motor[motor_right] = MOTOR_SPEED;
 					wait1Msec(150);
@@ -228,6 +280,7 @@ void LineFolower()
 						c = SensorValue[line];
 					}
 				} else {
+					update_position(INT_RIGHT);
 					motor[motor_left] = MOTOR_SPEED;
 					motor[motor_right] = MOTOR_SPEED;
 					wait1Msec(150);
@@ -309,9 +362,7 @@ void shoot()
 
 task main()
 {
-	for (int i = 0; i < 32; i++) {
-		dirlist[i] = 0;
-	}
+	clear_direction_array();
 	dirlist[0] = INT_LEFT;
 	dirlist[1] = INT_RIGHT;
 	dirlist[2] = INT_LEFT;
