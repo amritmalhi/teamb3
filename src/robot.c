@@ -21,10 +21,14 @@ bool commandStopped;
 float deltaTime;
 
 int direction;
+int dirlist[32];
+int dirlist_index = 0;
+bool goto_destination = false;
+int intersection_count = 0;
 
 #define MOTOR_SPEED 60
-#define MOTOR_SPEED_TURN 70
-#define MOTOR_SPEED_TURN_NEGATIVE 5
+#define MOTOR_SPEED_TURN 80
+#define MOTOR_SPEED_TURN_NEGATIVE -25
 #define MOTOR_SPEED_TURN_SHARP MOTOR_SPEED_TURN
 #define MOTOR_SPEED_TURN_SHARP_NEGATIVE MOTOR_SPEED_TURN_NEGATIVE
 #define ROTATE_TIME 2.0
@@ -160,6 +164,7 @@ void LineFolower()
 	float rotateTime = 0.0;
 	float stopped_time = 0.0;
 	float rotate_time_total = 0.0;
+	bool was_intersection = false;
 
 	while (1)
 	{
@@ -182,6 +187,7 @@ void LineFolower()
 			stopped_time = STOP_SECONDS;
 		}
 
+		nxtDisplayTextLine(6, "Intersection: %i", intersection_count);
 		nxtDisplayTextLine(7, "%f", stopped_time);
 		nxtDisplayTextLine(0, "Start");
 		int c = SensorValue[line];
@@ -196,13 +202,23 @@ void LineFolower()
 			rotate_time_total = 0.0;
 
 			if (d < 44) {
-				nxtDisplayTextLine(6, "Intersection");
+				was_intersection = true;
+
+				if (direction == 0) {
+						motor[motor_left] = 0;
+						motor[motor_right] = 0;
+						while(1){
+							motor[motor_left] = 0;
+							motor[motor_right] = 0;
+						}
+				}
+
 				if (direction == INT_STRAIGHT) {
 
 				} else if (direction == INT_LEFT) {
 					motor[motor_left] = MOTOR_SPEED;
 					motor[motor_right] = MOTOR_SPEED;
-					wait1Msec(400);
+					wait1Msec(150);
 					motor[motor_left] = MOTOR_SPEED_TURN_NEGATIVE;
 					motor[motor_right] = MOTOR_SPEED_TURN;
 					wait1Msec(700);
@@ -214,7 +230,7 @@ void LineFolower()
 				} else {
 					motor[motor_left] = MOTOR_SPEED;
 					motor[motor_right] = MOTOR_SPEED;
-					wait1Msec(400);
+					wait1Msec(150);
 					motor[motor_left] = MOTOR_SPEED_TURN;
 					motor[motor_right] = MOTOR_SPEED_TURN_NEGATIVE;
 					wait1Msec(700);
@@ -226,6 +242,15 @@ void LineFolower()
 				}
 			}
 		} else {
+			if (was_intersection) {
+				was_intersection = false;
+				intersection_count++;
+				if (goto_destination) {
+					direction = dirlist[dirlist_index];
+					dirlist_index++;
+				}
+			}
+
 			rotateTime += deltaTime;
 			rotate_time_total += deltaTime;
 			if (rotateTime > ROTATE_TIME) {
@@ -275,12 +300,34 @@ task ObjectInWay()
 	}
 }
 
+void shoot()
+{
+	motor[motor_shoot] = 100;
+	wait1Msec(20000);
+	motor[motor_shoot] = 0;
+}
+
 task main()
 {
+	for (int i = 0; i < 32; i++) {
+		dirlist[i] = 0;
+	}
+	dirlist[0] = INT_LEFT;
+	dirlist[1] = INT_RIGHT;
+	dirlist[2] = INT_LEFT;
+	dirlist[3] = INT_LEFT;
+	dirlist[4] = INT_RIGHT;
+	dirlist[5] = INT_RIGHT;
+	dirlist[6] = INT_RIGHT;
+	dirlist[7] = INT_LEFT;
+	goto_destination = true;
+	direction = dirlist[0];
+	dirlist_index = 1;
+
 	stopped = false;
 	objectStopped = false;
 	commandStopped = false;
-	direction = INT_STRAIGHT;
+	//direction = INT_STRAIGHT;
 
 	startTask(commands);
 	startTask(ObjectInWay);
