@@ -65,6 +65,8 @@ int intersection_count = 0;
 int posx = 0;
 int posy = 0;
 int grid_direction = DIR_N;
+int TARGET_X = 0;
+int TARGET_Y = 0;
 
 #define MOTOR_SPEED 60
 #define MOTOR_SPEED_TURN 80
@@ -216,8 +218,10 @@ void create_route(pathfind_t* pathfind)
 
 void create_path(int targetx, int targety)
 {
+	TARGET_X = targetx;
+	TARGET_Y = targety;
     for (int i = 0; i < FIND_SIZE; i++) {
-        PATHFIND[PATH_IND].todo = 0;
+        PATHFIND[i].todo = 0;
     }
     for (int i = 0; i < MAP_SIZE; i++) {
         for (int j = 0; j < MAP_SIZE; j++) {
@@ -536,6 +540,57 @@ void LineFolower()
 			stopped_time = STOP_SECONDS;
 		}
 
+		if (objectStopped && goto_destination) {
+
+		//nxtDisplayTextLine(3, "px: %i py: %i %i", posx, posy, grid_direction);
+
+			if (grid_direction == DIR_N) {
+				if (GRID_MAP[posx][posy].north != NULL) {
+					GRID_MAP[posx][posy].north->south = NULL;
+				}
+				GRID_MAP[posx][posy].north = NULL;
+				grid_direction = DIR_S;
+				posx += 1;
+			} else if (grid_direction == DIR_S) {
+				if (GRID_MAP[posx][posy].south != NULL) {
+					GRID_MAP[posx][posy].south->north = NULL;
+				}
+				GRID_MAP[posx][posy].south = NULL;
+				grid_direction = DIR_N;
+				posx -= 1;
+			} else if (grid_direction == DIR_W) {
+				if (GRID_MAP[posx][posy].west != NULL) {
+					GRID_MAP[posx][posy].west->east = NULL;
+				}
+				GRID_MAP[posx][posy].west = NULL;
+				grid_direction = DIR_E;
+				posy += 1;
+			} else {
+				if (GRID_MAP[posx][posy].east != NULL) {
+					GRID_MAP[posx][posy].east->west = NULL;
+				}
+				GRID_MAP[posx][posy].east = NULL;
+				grid_direction = DIR_W;
+				posy -= 1;
+			}
+
+			create_path(TARGET_X, TARGET_Y);
+
+			motor[motor_left] = -MOTOR_SPEED_TURN;
+			motor[motor_right] = MOTOR_SPEED_TURN;
+			wait1Msec(1800);
+			int c = SensorValue[line];
+			while (!onLine(c))
+			{
+				c = SensorValue[line];
+			}
+
+			//nxtDisplayTextLine(4, "px: %i py: %i %i", posx, posy, grid_direction);
+			//motor[motor_left] = 0;
+			//motor[motor_right] = 0;
+			//wait1Msec(1000000);
+		}
+
 		nxtDisplayTextLine(6, "Intersection: %i", intersection_count);
 		nxtDisplayTextLine(7, "%f", stopped_time);
 		nxtDisplayTextLine(0, "Start");
@@ -573,6 +628,15 @@ void LineFolower()
 					motor[motor_left] = MOTOR_SPEED_TURN_NEGATIVE;
 					motor[motor_right] = MOTOR_SPEED_TURN;
 					wait1Msec(700);
+					c = SensorValue[line];
+					while (!onLine(c))
+					{
+						c = SensorValue[line];
+					}
+				} else if (direction = INT_U_TURN) {
+					motor[motor_left] = -MOTOR_SPEED_TURN;
+					motor[motor_right] = MOTOR_SPEED_TURN;
+					wait1Msec(1800);
 					c = SensorValue[line];
 					while (!onLine(c))
 					{
@@ -645,7 +709,7 @@ task ObjectInWay()
 	while (1)
 	{
 		int distance = SensorValue[sonar];
-		if (distance < 25) {
+		if (distance < 10) {
 			objectStopped = true;
 			nxtDisplayTextLine(1, "Object in way %f", distance);
 			wait1Msec(STOP_SECONDS * 1000 + 500);
@@ -665,7 +729,7 @@ task main()
 	direction = INT_STRAIGHT;
 	goto_destination = true;
 
-	create_path(3, 0);
+	create_path(2, 3);
 
 	stopped = false;
 	objectStopped = false;
