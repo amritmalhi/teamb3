@@ -8,6 +8,37 @@
 
 #pragma platform(NXT)
 
+#define MAP_SIZE 4
+#define INT_STRAIGHT 1
+#define INT_LEFT 2
+#define INT_RIGHT 3
+#define INT_U_TURN 4
+#define FIND_SIZE MAP_SIZE * MAP_SIZE + 1
+
+typedef struct grid_node
+{
+    int posx;
+    int posy;
+    struct grid_node* north;
+    struct grid_node* south;
+    struct grid_node* east;
+    struct grid_node* west;
+} grid_node_t;
+
+typedef struct pathfind
+{
+    int posx;
+    int posy;
+    int dir;
+    int todo;
+    int count;
+    struct pathfind* prev;
+} pathfind_t;
+
+grid_node_t GRID_MAP[MAP_SIZE][MAP_SIZE];
+unsigned char GRID_MAP_VISITED[MAP_SIZE][MAP_SIZE];
+pathfind_t PATHFIND[FIND_SIZE];
+int PATH_IND;
 
 long nLastXmitTimeStamp = nPgmTime;
 long nDeltaTime         = 0;
@@ -45,9 +76,40 @@ int grid_direction = DIR_N;
 
 #define STOP_SECONDS 1.0
 
-#define INT_STRAIGHT 1
-#define INT_LEFT 2
-#define INT_RIGHT 3
+void initialize_map()
+{
+    for (int i = 0; i < MAP_SIZE; i++) {
+        for (int j = 0; j < MAP_SIZE; j++) {
+            grid_node_t* grid_node = &GRID_MAP[i][j];
+            grid_node->posx = i;
+            grid_node->posy = j;
+
+            if (i + 1 < MAP_SIZE) {
+                grid_node->north = &GRID_MAP[i + 1][j];
+            } else {
+                grid_node->north = NULL;
+            }
+
+            if (i - 1 >= 0) {
+                grid_node->south = &GRID_MAP[i - 1][j];
+            } else {
+                grid_node->south = NULL;
+            }
+
+            if (j + 1 < MAP_SIZE) {
+                grid_node->west = &GRID_MAP[i][j + 1];
+            } else {
+                grid_node->west = NULL;
+            }
+
+            if (j - 1 >= 0) {
+                grid_node->east = &GRID_MAP[i][j - 1];
+            } else {
+                grid_node->east = NULL;
+            }
+        }
+    }
+}
 
 bool onLine(int color)
 {
@@ -60,6 +122,16 @@ bool onLine(int color)
 		case 5: return true;
 		default: return false;
 	}
+}
+
+void shoot()
+{
+	motor[motor_shoot] = 50;
+	nMotorEncoder[motor_shoot] = 0;
+	while (nMotorEncoder[motor_shoot] < 360) {
+		wait1Msec(10);
+	}
+	motor[motor_shoot] = 0;
 }
 
 void update_position(int turn)
@@ -102,6 +174,133 @@ void clear_direction_array()
 	for (int i = 0; i < 32; i++) {
 		dirlist[i] = 0;
 	}
+}
+
+void create_route(pathfind_t* pathfind)
+{
+	clear_direction_array();
+	dirlist_index = 1;
+
+    dirlist[pathfind->count + 1] = 0;
+    while (pathfind != NULL)
+    {
+        if (pathfind->count >= 0) {
+            if (pathfind->prev->dir == pathfind->dir) {
+                dirlist[pathfind->count] = INT_STRAIGHT;
+            } else if (pathfind->prev->dir == DIR_N && pathfind->dir == DIR_E) {
+                dirlist[pathfind->count] = INT_RIGHT;
+            } else if (pathfind->prev->dir == DIR_E && pathfind->dir == DIR_S) {
+                dirlist[pathfind->count] = INT_RIGHT;
+            } else if (pathfind->prev->dir == DIR_S && pathfind->dir == DIR_W) {
+                dirlist[pathfind->count] = INT_RIGHT;
+            } else if (pathfind->prev->dir == DIR_W && pathfind->dir == DIR_N) {
+                dirlist[pathfind->count] = INT_RIGHT;
+            } else if (pathfind->prev->dir == DIR_N && pathfind->dir == DIR_S) {
+                dirlist[pathfind->count] = INT_U_TURN;
+            } else if (pathfind->prev->dir == DIR_S && pathfind->dir == DIR_N) {
+                dirlist[pathfind->count] = INT_U_TURN;
+            } else if (pathfind->prev->dir == DIR_E && pathfind->dir == DIR_W) {
+                dirlist[pathfind->count] = INT_U_TURN;
+            } else if (pathfind->prev->dir == DIR_W && pathfind->dir == DIR_E) {
+                dirlist[pathfind->count] = INT_U_TURN;
+            } else {
+                dirlist[pathfind->count] = INT_LEFT;
+            }
+        }
+
+        pathfind = pathfind->prev;
+    }
+
+    direction = dirlist[0];
+}
+
+void create_path(int targetx, int targety)
+{
+    for (int i = 0; i < FIND_SIZE; i++) {
+        PATHFIND[PATH_IND].todo = 0;
+    }
+    for (int i = 0; i < MAP_SIZE; i++) {
+        for (int j = 0; j < MAP_SIZE; j++) {
+            GRID_MAP_VISITED[i][j] = 0;
+        }
+    }
+
+    PATH_IND = 0;
+
+    PATHFIND[PATH_IND].dir = grid_direction;
+    PATHFIND[PATH_IND].posx = posx + 1;
+    PATHFIND[PATH_IND].posy = posy;
+    PATHFIND[PATH_IND].prev = NULL;
+    PATHFIND[PATH_IND].todo = 1;
+    PATHFIND[PATH_IND].count = -1;
+    PATH_IND++;
+
+    while (1)
+    {
+        pathfind_t* pathfind = NULL;
+        int shortest_count = 1024;
+        for (int i = 0; i < FIND_SIZE; i++) {
+            if (PATHFIND[i].todo == 1 && PATHFIND[i].count < shortest_count) {
+                pathfind = &PATHFIND[i];
+                shortest_count = pathfind->count;
+            }
+        }
+
+        if (pathfind == NULL) {
+            break;
+        }
+
+        if (pathfind->posx == targetx && pathfind->posy == targety) {
+            create_route(pathfind);
+            break;
+        }
+
+        if (GRID_MAP[pathfind->posx][pathfind->posy].north != NULL && GRID_MAP_VISITED[pathfind->posx + 1][pathfind->posy] == 0) {
+            GRID_MAP_VISITED[pathfind->posx + 1][pathfind->posy] = 1;
+            PATHFIND[PATH_IND].posx = pathfind->posx + 1;
+            PATHFIND[PATH_IND].posy = pathfind->posy;
+            PATHFIND[PATH_IND].dir = DIR_N;
+            PATHFIND[PATH_IND].prev = pathfind;
+            PATHFIND[PATH_IND].todo = 1;
+            PATHFIND[PATH_IND].count = pathfind->count + 1;
+            PATH_IND++;
+        }
+
+        if (GRID_MAP[pathfind->posx][pathfind->posy].south != NULL && GRID_MAP_VISITED[pathfind->posx - 1][pathfind->posy] == 0) {
+            GRID_MAP_VISITED[pathfind->posx - 1][pathfind->posy] = 1;
+            PATHFIND[PATH_IND].posx = pathfind->posx - 1;
+            PATHFIND[PATH_IND].posy = pathfind->posy;
+            PATHFIND[PATH_IND].dir = DIR_S;
+            PATHFIND[PATH_IND].prev = pathfind;
+            PATHFIND[PATH_IND].todo = 1;
+            PATHFIND[PATH_IND].count = pathfind->count + 1;
+            PATH_IND++;
+        }
+
+        if (GRID_MAP[pathfind->posx][pathfind->posy].west != NULL && GRID_MAP_VISITED[pathfind->posx][pathfind->posy + 1] == 0) {
+            GRID_MAP_VISITED[pathfind->posx][pathfind->posy + 1] = 1;
+            PATHFIND[PATH_IND].posx = pathfind->posx;
+            PATHFIND[PATH_IND].posy = pathfind->posy + 1;
+            PATHFIND[PATH_IND].dir = DIR_W;
+            PATHFIND[PATH_IND].prev = pathfind;
+            PATHFIND[PATH_IND].todo = 1;
+            PATHFIND[PATH_IND].count = pathfind->count + 1;
+            PATH_IND++;
+        }
+
+        if (GRID_MAP[pathfind->posx][pathfind->posy].east != NULL && GRID_MAP_VISITED[pathfind->posx][pathfind->posy - 1] == 0) {
+            GRID_MAP_VISITED[pathfind->posx][pathfind->posy - 1] = 1;
+            PATHFIND[PATH_IND].posx = pathfind->posx;
+            PATHFIND[PATH_IND].posy = pathfind->posy - 1;
+            PATHFIND[PATH_IND].dir = DIR_E;
+            PATHFIND[PATH_IND].prev = pathfind;
+            PATHFIND[PATH_IND].todo = 1;
+            PATHFIND[PATH_IND].count = pathfind->count + 1;
+            PATH_IND++;
+        }
+
+        pathfind->todo = 0;
+    }
 }
 
 task commands()
@@ -149,45 +348,143 @@ task DrivingSound()
 	while(1)
 	{
 		if (!stopped) {
-			PlayTone(695, 14); while(bSoundActive && !stopped);
-			PlayTone(695, 14); while(bSoundActive && !stopped);
-			PlayTone(695, 14); while(bSoundActive && !stopped);
-			PlayTone(929, 83); while(bSoundActive && !stopped);
-			PlayTone(1401, 83); while(bSoundActive && !stopped);
-			PlayTone(1251, 14); while(bSoundActive && !stopped);
-			PlayTone(1188, 14); while(bSoundActive && !stopped);
-			PlayTone(1054, 14); while(bSoundActive && !stopped);
-			PlayTone(1841, 83); while(bSoundActive && !stopped);
-			PlayTone(1401, 41); while(bSoundActive && !stopped);
-			PlayTone(1251, 14); while(bSoundActive && !stopped);
-			PlayTone(1188, 14); while(bSoundActive && !stopped);
-			PlayTone(1054, 14); while(bSoundActive && !stopped);
-			PlayTone(1841, 83); while(bSoundActive && !stopped);
-			PlayTone(1401, 41); while(bSoundActive && !stopped);
-			PlayTone(1251, 14); while(bSoundActive && !stopped);
-			PlayTone(1188, 14); while(bSoundActive && !stopped);
-			PlayTone(1251, 14); while(bSoundActive && !stopped);
-			PlayTone(1054, 55); while(bSoundActive && !stopped);
-			wait1Msec(280);
-			PlayTone(695, 14); while(bSoundActive && !stopped);
-			PlayTone(695, 14); while(bSoundActive && !stopped);
-			PlayTone(695, 14); while(bSoundActive && !stopped);
-			PlayTone(929, 83); while(bSoundActive && !stopped);
-			PlayTone(1401, 83); while(bSoundActive && !stopped);
-			PlayTone(1251, 14); while(bSoundActive && !stopped);
-			PlayTone(1188, 14); while(bSoundActive && !stopped);
-			PlayTone(1054, 14); while(bSoundActive && !stopped);
-			PlayTone(1841, 83); while(bSoundActive && !stopped);
-			PlayTone(1401, 41); while(bSoundActive && !stopped);
-			PlayTone(1251, 14); while(bSoundActive && !stopped);
-			PlayTone(1188, 14); while(bSoundActive && !stopped);
-			PlayTone(1054, 14); while(bSoundActive && !stopped);
-			PlayTone(1841, 83); while(bSoundActive && !stopped);
-			PlayTone(1401, 41); while(bSoundActive && !stopped);
-			PlayTone(1251, 14); while(bSoundActive && !stopped);
-			PlayTone(1188, 14); while(bSoundActive && !stopped);
-			PlayTone(1251, 14); while(bSoundActive && !stopped);
-			PlayTone(1054, 55); while(bSoundActive && !stopped);
+
+			  PlayTone(    0,  202); wait1Msec(2243);  // Note(Rest, Duration(Whole))
+  PlayTone(  391,   25); wait1Msec( 280);  // Note(G4, Duration(Eighth))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  391,   25); wait1Msec( 280);  // Note(G4, Duration(Eighth))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  391,   25); wait1Msec( 280);  // Note(G4, Duration(Eighth))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  311,   25); wait1Msec( 280);  // Note(D#4, Duration(Eighth))
+  PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  PlayTone(  466,    6); wait1Msec(  70);  // Note(A#4, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  391,   25); wait1Msec( 280);  // Note(G4, Duration(Eighth))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  311,   25); wait1Msec( 280);  // Note(D#4, Duration(Eighth))
+  PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  PlayTone(  466,    6); wait1Msec(  70);  // Note(A#4, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  391,   76); wait1Msec( 841);  // Note(G4, Duration(Quarter .))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  587,   25); wait1Msec( 280);  // Note(D, Duration(Eighth))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  587,   25); wait1Msec( 280);  // Note(D, Duration(Eighth))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  587,   25); wait1Msec( 280);  // Note(D, Duration(Eighth))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  622,   25); wait1Msec( 280);  // Note(D#, Duration(Eighth))
+  PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  PlayTone(  466,    6); wait1Msec(  70);  // Note(A#4, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  369,   25); wait1Msec( 280);  // Note(F#4, Duration(Eighth))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  311,   25); wait1Msec( 280);  // Note(D#4, Duration(Eighth))
+  PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  PlayTone(  466,    6); wait1Msec(  70);  // Note(A#4, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  391,   76); wait1Msec( 841);  // Note(G4, Duration(Quarter .))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  783,   25); wait1Msec( 280);  // Note(G, Duration(Eighth))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  391,   25); wait1Msec( 280);  // Note(G4, Duration(Eighth))
+  PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  PlayTone(  391,    6); wait1Msec(  70);  // Note(G4, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  783,   25); wait1Msec( 280);  // Note(G, Duration(Eighth))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  739,   25); wait1Msec( 280);  // Note(F#, Duration(Eighth))
+  PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  PlayTone(  698,    6); wait1Msec(  70);  // Note(F, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  659,    6); wait1Msec(  70);  // Note(E, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  622,    6); wait1Msec(  70);  // Note(D#, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  659,   19); wait1Msec( 210);  // Note(E, Duration(16th .))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  415,   19); wait1Msec( 210);  // Note(G#4, Duration(16th .))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  554,   25); wait1Msec( 280);  // Note(C#, Duration(Eighth))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  523,   25); wait1Msec( 280);  // Note(C, Duration(Eighth))
+  PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  PlayTone(  493,    6); wait1Msec(  70);  // Note(B4, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  466,    6); wait1Msec(  70);  // Note(A#4, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  440,    6); wait1Msec(  70);  // Note(A4, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  466,   19); wait1Msec( 210);  // Note(A#4, Duration(16th .))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  311,   19); wait1Msec( 210);  // Note(D#4, Duration(16th .))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  369,   25); wait1Msec( 280);  // Note(F#4, Duration(Eighth))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  311,   25); wait1Msec( 280);  // Note(D#4, Duration(Eighth))
+  PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  PlayTone(  391,    6); wait1Msec(  70);  // Note(G4, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  466,   25); wait1Msec( 280);  // Note(A#4, Duration(Eighth))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  391,   25); wait1Msec( 280);  // Note(G4, Duration(Eighth))
+  PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  PlayTone(  466,    6); wait1Msec(  70);  // Note(A#4, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  587,   76); wait1Msec( 841);  // Note(D, Duration(Quarter .))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  783,   25); wait1Msec( 280);  // Note(G, Duration(Eighth))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  391,   25); wait1Msec( 280);  // Note(G4, Duration(Eighth))
+  PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  PlayTone(  391,    6); wait1Msec(  70);  // Note(G4, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  783,   25); wait1Msec( 280);  // Note(G, Duration(Eighth))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  739,   25); wait1Msec( 280);  // Note(F#, Duration(Eighth))
+  PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  PlayTone(  698,    6); wait1Msec(  70);  // Note(F, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  659,    6); wait1Msec(  70);  // Note(E, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  622,    6); wait1Msec(  70);  // Note(D#, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  659,   19); wait1Msec( 210);  // Note(E, Duration(16th .))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  415,   19); wait1Msec( 210);  // Note(G#4, Duration(16th .))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  554,   25); wait1Msec( 280);  // Note(C#, Duration(Eighth))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  523,   25); wait1Msec( 280);  // Note(C, Duration(Eighth))
+  PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  PlayTone(  493,    6); wait1Msec(  70);  // Note(B4, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  466,    6); wait1Msec(  70);  // Note(A#4, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  440,    6); wait1Msec(  70);  // Note(A4, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  466,   19); wait1Msec( 210);  // Note(A#4, Duration(16th .))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  311,   19); wait1Msec( 210);  // Note(D#4, Duration(16th .))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  369,   25); wait1Msec( 280);  // Note(F#4, Duration(Eighth))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  311,   25); wait1Msec( 280);  // Note(D#4, Duration(Eighth))
+  PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  PlayTone(  466,    6); wait1Msec(  70);  // Note(A#4, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  391,   25); wait1Msec( 280);  // Note(G4, Duration(Eighth))
+  PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  PlayTone(  311,   25); wait1Msec( 280);  // Note(D#4, Duration(Eighth))
+  PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  PlayTone(  466,    6); wait1Msec(  70);  // Note(A#4, Duration(32th))
+  PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  PlayTone(  391,   76); wait1Msec( 841);  // Note(G4, Duration(Quarter .))
 		} else {
 			clearSounds();
 		}
@@ -216,6 +513,7 @@ void LineFolower()
 	float stopped_time = 0.0;
 	float rotate_time_total = 0.0;
 	bool was_intersection = false;
+	bool was_straight_intersection = false;
 
 	while (1)
 	{
@@ -258,6 +556,7 @@ void LineFolower()
 				if (direction == 0) {
 						motor[motor_left] = 0;
 						motor[motor_right] = 0;
+						shoot();
 						while(1){
 							motor[motor_left] = 0;
 							motor[motor_right] = 0;
@@ -265,7 +564,7 @@ void LineFolower()
 				}
 
 				if (direction == INT_STRAIGHT) {
-					update_position(INT_STRAIGHT);
+					was_straight_intersection = true;
 				} else if (direction == INT_LEFT) {
 					update_position(INT_LEFT);
 					motor[motor_left] = MOTOR_SPEED;
@@ -297,6 +596,12 @@ void LineFolower()
 		} else {
 			if (was_intersection) {
 				was_intersection = false;
+
+				if (was_straight_intersection) {
+					was_straight_intersection = false;
+					update_position(INT_STRAIGHT);
+				}
+
 				intersection_count++;
 				if (goto_destination) {
 					direction = dirlist[dirlist_index];
@@ -353,32 +658,18 @@ task ObjectInWay()
 	}
 }
 
-void shoot()
-{
-	motor[motor_shoot] = 100;
-	wait1Msec(20000);
-	motor[motor_shoot] = 0;
-}
-
 task main()
 {
-	clear_direction_array();
-	dirlist[0] = INT_LEFT;
-	dirlist[1] = INT_RIGHT;
-	dirlist[2] = INT_LEFT;
-	dirlist[3] = INT_LEFT;
-	dirlist[4] = INT_RIGHT;
-	dirlist[5] = INT_RIGHT;
-	dirlist[6] = INT_RIGHT;
-	dirlist[7] = INT_LEFT;
+	initialize_map();
+
+	direction = INT_STRAIGHT;
 	goto_destination = true;
-	direction = dirlist[0];
-	dirlist_index = 1;
+
+	create_path(3, 0);
 
 	stopped = false;
 	objectStopped = false;
 	commandStopped = false;
-	//direction = INT_STRAIGHT;
 
 	startTask(commands);
 	startTask(ObjectInWay);
