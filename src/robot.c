@@ -51,6 +51,8 @@ bool objectStopped;
 bool commandStopped;
 float deltaTime;
 
+int SHOOT_COUNT = 0;
+
 int direction;
 int dirlist[32];
 int dirlist_index = 0;
@@ -128,7 +130,7 @@ bool onLine(int color)
 
 void shoot()
 {
-	motor[motor_shoot] = 50;
+	motor[motor_shoot] = 60;
 	nMotorEncoder[motor_shoot] = 0;
 	while (nMotorEncoder[motor_shoot] < 360) {
 		wait1Msec(10);
@@ -327,11 +329,9 @@ task commands()
     	nxtDisplayTextLine(2, "%s", s);
 
     	if (s == "FIRE") {
-    		nxtDisplayTextLine(5, "going");
-    		commandStopped = false;
+    		SHOOT_COUNT++;
     	} else if (s == "DOWN") {
-    		nxtDisplayTextLine(5, "stop");
-    		commandStopped = true;
+    		commandStopped = commandStopped ? false : true;
     	} else if (s == "LEFT") {
     		direction = INT_LEFT;
     	} else if (s == "UP") {
@@ -618,6 +618,8 @@ void LineFolower()
 						}
 				}
 
+				nxtDisplayTextLine(0, "dir: %i",direction);
+
 				if (direction == INT_STRAIGHT) {
 					was_straight_intersection = true;
 				} else if (direction == INT_LEFT) {
@@ -633,7 +635,7 @@ void LineFolower()
 					{
 						c = SensorValue[line];
 					}
-				} else if (direction = INT_U_TURN) {
+				} else if (direction == INT_U_TURN) {
 					motor[motor_left] = -MOTOR_SPEED_TURN;
 					motor[motor_right] = MOTOR_SPEED_TURN;
 					wait1Msec(1800);
@@ -644,6 +646,7 @@ void LineFolower()
 					}
 				} else {
 					update_position(INT_RIGHT);
+					nxtDisplayTextLine(0, "RIGHT");
 					motor[motor_left] = MOTOR_SPEED;
 					motor[motor_right] = MOTOR_SPEED;
 					wait1Msec(150);
@@ -722,22 +725,35 @@ task ObjectInWay()
 	}
 }
 
+task Shooting()
+{
+	while (true)
+	{
+		while (SHOOT_COUNT)
+		{
+			shoot();
+			SHOOT_COUNT--;
+		}
+	}
+}
+
 task main()
 {
 	initialize_map();
 
 	direction = INT_STRAIGHT;
-	goto_destination = true;
+	goto_destination = false;
 
 	create_path(2, 3);
 
-	stopped = false;
+	stopped = true;
 	objectStopped = false;
-	commandStopped = false;
+	commandStopped = true;
 
 	startTask(commands);
 	startTask(ObjectInWay);
 	startTask(DrivingSound);
+	startTask(Shooting);
 
 	LineFolower();
 }
