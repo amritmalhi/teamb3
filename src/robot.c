@@ -36,7 +36,7 @@ typedef struct pathfind
 } pathfind_t;
 
 grid_node_t GRID_MAP[MAP_SIZE][MAP_SIZE];
-unsigned char GRID_MAP_VISITED[MAP_SIZE][MAP_SIZE];
+unsigned char GRID_MAP_VISITED[MAP_SIZE + 1][MAP_SIZE + 1];
 pathfind_t PATHFIND[FIND_SIZE];
 int PATH_IND;
 
@@ -233,9 +233,21 @@ void create_path(int targetx, int targety)
 
     PATH_IND = 0;
 
+    int posx_shift = 0;
+    int posy_shift = 0;
+    if (grid_direction == DIR_N) {
+    	posx_shift = 1;
+    } else if (grid_direction == DIR_S) {
+    	posx_shift = -1;
+  	} else if (grid_direction == DIR_W) {
+  		posy_shift = 1;
+  	} else {
+  		posy_shift = -1;
+  	}
+
     PATHFIND[PATH_IND].dir = grid_direction;
-    PATHFIND[PATH_IND].posx = posx + 1;
-    PATHFIND[PATH_IND].posy = posy;
+    PATHFIND[PATH_IND].posx = posx + posx_shift;
+    PATHFIND[PATH_IND].posy = posy + posy_shift;
     PATHFIND[PATH_IND].prev = NULL;
     PATHFIND[PATH_IND].todo = 1;
     PATHFIND[PATH_IND].count = -1;
@@ -542,7 +554,9 @@ void LineFolower()
 
 		if (objectStopped && goto_destination) {
 
-		//nxtDisplayTextLine(3, "px: %i py: %i %i", posx, posy, grid_direction);
+		motor[motor_left] = MOTOR_SPEED;
+		motor[motor_right] = MOTOR_SPEED;
+		wait1Msec(120);
 
 			if (grid_direction == DIR_N) {
 				if (GRID_MAP[posx][posy].north != NULL) {
@@ -585,10 +599,7 @@ void LineFolower()
 				c = SensorValue[line];
 			}
 
-			//nxtDisplayTextLine(4, "px: %i py: %i %i", posx, posy, grid_direction);
-			//motor[motor_left] = 0;
-			//motor[motor_right] = 0;
-			//wait1Msec(1000000);
+			objectStopped = false;
 		}
 
 		nxtDisplayTextLine(6, "Intersection: %i", intersection_count);
@@ -712,7 +723,7 @@ task ObjectInWay()
 	while (1)
 	{
 		int distance = SensorValue[sonar];
-		if (distance < 10) {
+		if (distance < 17) {
 			objectStopped = true;
 			nxtDisplayTextLine(1, "Object in way %f", distance);
 			wait1Msec(STOP_SECONDS * 1000 + 500);
@@ -742,13 +753,13 @@ task main()
 	initialize_map();
 
 	direction = INT_STRAIGHT;
-	goto_destination = false;
+	goto_destination = true;
 
-	create_path(2, 3);
+	create_path(3, 3);
 
-	stopped = true;
+	stopped = false;
 	objectStopped = false;
-	commandStopped = true;
+	commandStopped = false;
 
 	startTask(commands);
 	startTask(ObjectInWay);
