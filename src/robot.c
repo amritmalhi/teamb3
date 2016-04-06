@@ -8,12 +8,22 @@
 
 #pragma platform(NXT)
 
-#define MAP_SIZE 4
+#define MAP_SIZE 5
 #define INT_STRAIGHT 1
 #define INT_LEFT 2
 #define INT_RIGHT 3
 #define INT_U_TURN 4
 #define FIND_SIZE MAP_SIZE * MAP_SIZE + 1
+
+#define DESTINATION_A_X 0
+#define DESTINATION_A_Y 4
+#define DESTINATION_B_X 4
+#define DESTINATION_B_Y 4
+#define DESTINATION_C_X 4
+#define DESTINATION_C_Y 0
+
+int DEST_X = -1;
+int DEST_Y = -1;
 
 typedef struct grid_node
 {
@@ -350,6 +360,15 @@ task commands()
     		direction = INT_STRAIGHT;
     	} else if (s == "RIGHT") {
     		direction = INT_RIGHT;
+    	} else if (s == "A") {
+    		DEST_X = DESTINATION_A_X;
+    		DEST_Y = DESTINATION_A_Y;
+    	} else if (s == "B") {
+    		DEST_X = DESTINATION_B_X;
+    		DEST_Y = DESTINATION_B_Y;
+    	} else if (s == "C") {
+    		DEST_X = DESTINATION_C_X;
+    		DEST_Y = DESTINATION_C_Y;
     	}
     }
     wait1Msec(100);
@@ -533,6 +552,16 @@ void LineFolower()
 
 	while (1)
 	{
+		if (DEST_X >= 0 && DEST_Y >= 0) {
+			create_path(DEST_X, DEST_Y);
+			DEST_X = -1;
+			DEST_Y = -1;
+
+			goto_destination = true;
+
+			commandStopped = false;
+		}
+
 		if (objectStopped || commandStopped) {
 			stopped = true;
 		} else {
@@ -622,11 +651,8 @@ void LineFolower()
 				if (direction == 0) {
 						motor[motor_left] = 0;
 						motor[motor_right] = 0;
-						shoot();
-						while(1){
-							motor[motor_left] = 0;
-							motor[motor_right] = 0;
-						}
+						goto_destination = false;
+						commandStopped = true;
 				}
 
 				nxtDisplayTextLine(0, "dir: %i",direction);
@@ -655,7 +681,7 @@ void LineFolower()
 					{
 						c = SensorValue[line];
 					}
-				} else {
+				} else if (direction == INT_RIGHT) {
 					update_position(INT_RIGHT);
 					nxtDisplayTextLine(0, "RIGHT");
 					motor[motor_left] = MOTOR_SPEED;
@@ -753,13 +779,13 @@ task main()
 	initialize_map();
 
 	direction = INT_STRAIGHT;
-	goto_destination = true;
+	goto_destination = false;
 
-	create_path(3, 3);
+	create_path(1, 0);
 
-	stopped = false;
+	stopped = true;
 	objectStopped = false;
-	commandStopped = false;
+	commandStopped = true;
 
 	startTask(commands);
 	startTask(ObjectInWay);
