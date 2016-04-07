@@ -385,141 +385,277 @@ task DrivingSound()
 		if (!stopped) {
 
 			  PlayTone(    0,  202); wait1Msec(2243);  // Note(Rest, Duration(Whole))
+			  if (stopped) continue;
   PlayTone(  391,   25); wait1Msec( 280);  // Note(G4, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  391,   25); wait1Msec( 280);  // Note(G4, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  391,   25); wait1Msec( 280);  // Note(G4, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  311,   25); wait1Msec( 280);  // Note(D#4, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  if (stopped) continue;
   PlayTone(  466,    6); wait1Msec(  70);  // Note(A#4, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  391,   25); wait1Msec( 280);  // Note(G4, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  311,   25); wait1Msec( 280);  // Note(D#4, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  if (stopped) continue;
   PlayTone(  466,    6); wait1Msec(  70);  // Note(A#4, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  391,   76); wait1Msec( 841);  // Note(G4, Duration(Quarter .))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  587,   25); wait1Msec( 280);  // Note(D, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  587,   25); wait1Msec( 280);  // Note(D, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  587,   25); wait1Msec( 280);  // Note(D, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  622,   25); wait1Msec( 280);  // Note(D#, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  if (stopped) continue;
   PlayTone(  466,    6); wait1Msec(  70);  // Note(A#4, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  369,   25); wait1Msec( 280);  // Note(F#4, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  311,   25); wait1Msec( 280);  // Note(D#4, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  if (stopped) continue;
   PlayTone(  466,    6); wait1Msec(  70);  // Note(A#4, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  391,   76); wait1Msec( 841);  // Note(G4, Duration(Quarter .))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  783,   25); wait1Msec( 280);  // Note(G, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  391,   25); wait1Msec( 280);  // Note(G4, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  if (stopped) continue;
   PlayTone(  391,    6); wait1Msec(  70);  // Note(G4, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  783,   25); wait1Msec( 280);  // Note(G, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  739,   25); wait1Msec( 280);  // Note(F#, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  if (stopped) continue;
   PlayTone(  698,    6); wait1Msec(  70);  // Note(F, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  659,    6); wait1Msec(  70);  // Note(E, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  622,    6); wait1Msec(  70);  // Note(D#, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  659,   19); wait1Msec( 210);  // Note(E, Duration(16th .))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  415,   19); wait1Msec( 210);  // Note(G#4, Duration(16th .))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  554,   25); wait1Msec( 280);  // Note(C#, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  523,   25); wait1Msec( 280);  // Note(C, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  if (stopped) continue;
   PlayTone(  493,    6); wait1Msec(  70);  // Note(B4, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  466,    6); wait1Msec(  70);  // Note(A#4, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  440,    6); wait1Msec(  70);  // Note(A4, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  466,   19); wait1Msec( 210);  // Note(A#4, Duration(16th .))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  311,   19); wait1Msec( 210);  // Note(D#4, Duration(16th .))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  369,   25); wait1Msec( 280);  // Note(F#4, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  311,   25); wait1Msec( 280);  // Note(D#4, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  if (stopped) continue;
   PlayTone(  391,    6); wait1Msec(  70);  // Note(G4, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  466,   25); wait1Msec( 280);  // Note(A#4, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  391,   25); wait1Msec( 280);  // Note(G4, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  if (stopped) continue;
   PlayTone(  466,    6); wait1Msec(  70);  // Note(A#4, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  587,   76); wait1Msec( 841);  // Note(D, Duration(Quarter .))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  783,   25); wait1Msec( 280);  // Note(G, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  391,   25); wait1Msec( 280);  // Note(G4, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  if (stopped) continue;
   PlayTone(  391,    6); wait1Msec(  70);  // Note(G4, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  783,   25); wait1Msec( 280);  // Note(G, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  739,   25); wait1Msec( 280);  // Note(F#, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  if (stopped) continue;
   PlayTone(  698,    6); wait1Msec(  70);  // Note(F, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  659,    6); wait1Msec(  70);  // Note(E, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  622,    6); wait1Msec(  70);  // Note(D#, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  659,   19); wait1Msec( 210);  // Note(E, Duration(16th .))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  415,   19); wait1Msec( 210);  // Note(G#4, Duration(16th .))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  554,   25); wait1Msec( 280);  // Note(C#, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  523,   25); wait1Msec( 280);  // Note(C, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  if (stopped) continue;
   PlayTone(  493,    6); wait1Msec(  70);  // Note(B4, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  466,    6); wait1Msec(  70);  // Note(A#4, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  440,    6); wait1Msec(  70);  // Note(A4, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  466,   19); wait1Msec( 210);  // Note(A#4, Duration(16th .))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  311,   19); wait1Msec( 210);  // Note(D#4, Duration(16th .))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  369,   25); wait1Msec( 280);  // Note(F#4, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  311,   25); wait1Msec( 280);  // Note(D#4, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  if (stopped) continue;
   PlayTone(  466,    6); wait1Msec(  70);  // Note(A#4, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  391,   25); wait1Msec( 280);  // Note(G4, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   25); wait1Msec( 280);  // Note(Rest, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(  311,   25); wait1Msec( 280);  // Note(D#4, Duration(Eighth))
+  if (stopped) continue;
   PlayTone(    0,   13); wait1Msec( 140);  // Note(Rest, Duration(16th))
+  if (stopped) continue;
   PlayTone(  466,    6); wait1Msec(  70);  // Note(A#4, Duration(32th))
+  if (stopped) continue;
   PlayTone(    0,    6); wait1Msec(  70);  // Note(Rest, Duration(32th))
+  if (stopped) continue;
   PlayTone(  391,   76); wait1Msec( 841);  // Note(G4, Duration(Quarter .))
+  if (stopped) continue;
 		} else {
 			clearSounds();
 		}
